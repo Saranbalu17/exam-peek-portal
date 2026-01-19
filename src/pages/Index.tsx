@@ -17,6 +17,15 @@ const examDetails = {
   status: 'pass' as const,
   evaluatedBy: 'Dr. Sharma',
   evaluatedDate: 'March 28, 2024',
+  questionWiseMarks: [
+    { questionNo: 1, section: 'Section A', maxMarks: 10, obtainedMarks: 9 },
+    { questionNo: 2, section: 'Section A', maxMarks: 10, obtainedMarks: 8 },
+    { questionNo: 3, section: 'Section A', maxMarks: 10, obtainedMarks: 7 },
+    { questionNo: 4, section: 'Section B', maxMarks: 15, obtainedMarks: 13 },
+    { questionNo: 5, section: 'Section B', maxMarks: 15, obtainedMarks: 12 },
+    { questionNo: 6, section: 'Section C', maxMarks: 20, obtainedMarks: 15 },
+    { questionNo: 7, section: 'Section C', maxMarks: 20, obtainedMarks: 14 },
+  ],
 };
 
 // Sample PDF URL - using a public sample PDF
