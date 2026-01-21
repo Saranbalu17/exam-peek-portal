@@ -1,11 +1,32 @@
 import { useState } from 'react';
 import DashboardHeader from '@/components/DashboardHeader';
-import PDFViewer from '@/components/PDFViewer';
+import ScrollablePDFViewer from '@/components/ScrollablePDFViewer';
 import ExamDetailsSidebar from '@/components/ExamDetailsSidebar';
+import ExamFilters from '@/components/ExamFilters';
+import QueryDialog from '@/components/QueryDialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, BarChart3 } from 'lucide-react';
+import { FileText, BarChart3, Settings } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+
+// Sample subjects data
+const subjects = [
+  { code: 'CS601', name: 'Database Management Systems' },
+  { code: 'CS602', name: 'Computer Networks' },
+  { code: 'CS603', name: 'Operating Systems' },
+  { code: 'CS604', name: 'Software Engineering' },
+  { code: 'CS605', name: 'Machine Learning' },
+];
+
+// Sample exam types
+const examTypes = [
+  { value: 'end_semester', label: 'End Semester Exam' },
+  { value: 'mid_semester', label: 'Mid Semester Exam' },
+  { value: 'internal_1', label: 'Internal Assessment 1' },
+  { value: 'internal_2', label: 'Internal Assessment 2' },
+  { value: 'practical', label: 'Practical Exam' },
+];
 
 // Sample exam data
 const examDetails = {
@@ -38,11 +59,12 @@ const samplePdfUrl = 'https://www.w3.org/WAI/WCAG21/Techniques/pdf/img/table-wor
 const Index = () => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('paper');
+  const [selectedSubject, setSelectedSubject] = useState('CS601');
+  const [selectedExamType, setSelectedExamType] = useState('end_semester');
+  const [queryDialogOpen, setQueryDialogOpen] = useState(false);
 
   const handleRaiseQuery = () => {
-    toast.info('Query feature coming soon!', {
-      description: 'You will be able to raise objections about specific questions.',
-    });
+    setQueryDialogOpen(true);
   };
 
   return (
@@ -55,26 +77,44 @@ const Index = () => {
       />
       
       <main className="flex-1 w-full">
-        {/* Page Header */}
+        {/* Page Header with Filters */}
         <div className="bg-card border-b border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <h2 className="text-xl md:text-2xl font-bold text-foreground">View Answer Paper</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  {examDetails.subjectCode} - {examDetails.subjectName}
-                </p>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-bold text-foreground">View Answer Paper</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    Select subject and exam type to view your answer paper
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
+                    examDetails.status === 'pass' 
+                      ? 'bg-success/10 text-success border border-success/20' 
+                      : 'bg-destructive/10 text-destructive border border-destructive/20'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${examDetails.status === 'pass' ? 'bg-success' : 'bg-destructive'}`} />
+                    {examDetails.marksObtained}/{examDetails.totalMarks} Marks
+                  </span>
+                  <Link to="/admin">
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Settings className="w-4 h-4" />
+                      <span className="hidden sm:inline">Admin</span>
+                    </Button>
+                  </Link>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
-                  examDetails.status === 'pass' 
-                    ? 'bg-success/10 text-success border border-success/20' 
-                    : 'bg-destructive/10 text-destructive border border-destructive/20'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${examDetails.status === 'pass' ? 'bg-success' : 'bg-destructive'}`} />
-                  {examDetails.marksObtained}/{examDetails.totalMarks} Marks
-                </span>
-              </div>
+              
+              {/* Filters */}
+              <ExamFilters
+                subjects={subjects}
+                examTypes={examTypes}
+                selectedSubject={selectedSubject}
+                selectedExamType={selectedExamType}
+                onSubjectChange={setSelectedSubject}
+                onExamTypeChange={setSelectedExamType}
+              />
             </div>
           </div>
         </div>
@@ -95,8 +135,8 @@ const Index = () => {
               </TabsList>
               
               <TabsContent value="paper" className="mt-0">
-                <div className="h-[calc(100vh-240px)]">
-                  <PDFViewer 
+                <div className="h-[calc(100vh-320px)]">
+                  <ScrollablePDFViewer 
                     pdfUrl={samplePdfUrl}
                     title={`${examDetails.subjectCode}_${examDetails.studentName}_AnswerPaper.pdf`}
                   />
@@ -104,7 +144,7 @@ const Index = () => {
               </TabsContent>
               
               <TabsContent value="details" className="mt-0">
-                <div className="h-[calc(100vh-240px)]">
+                <div className="h-[calc(100vh-320px)]">
                   <ExamDetailsSidebar 
                     details={examDetails} 
                     onRaiseQuery={handleRaiseQuery}
@@ -116,10 +156,10 @@ const Index = () => {
         ) : (
           /* Desktop: Side by Side Layout */
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 h-[calc(100vh-280px)]">
               {/* PDF Viewer - Takes more space */}
               <div className="lg:col-span-2 xl:col-span-3 h-full">
-                <PDFViewer 
+                <ScrollablePDFViewer 
                   pdfUrl={samplePdfUrl}
                   title={`${examDetails.subjectCode}_${examDetails.studentName}_AnswerPaper.pdf`}
                 />
@@ -141,6 +181,20 @@ const Index = () => {
       <footer className="py-3 md:py-4 text-center text-xs md:text-sm text-muted-foreground border-t border-border bg-card/80 backdrop-blur-sm">
         <p>© 2024 National Institute of Technology. All rights reserved.</p>
       </footer>
+
+      {/* Query Dialog */}
+      <QueryDialog
+        open={queryDialogOpen}
+        onOpenChange={setQueryDialogOpen}
+        studentName={examDetails.studentName}
+        rollNumber={examDetails.rollNumber}
+        subjectName={examDetails.subjectName}
+        subjectCode={examDetails.subjectCode}
+        questions={examDetails.questionWiseMarks.map(q => ({
+          questionNo: q.questionNo,
+          section: q.section || 'General'
+        }))}
+      />
     </div>
   );
 };
